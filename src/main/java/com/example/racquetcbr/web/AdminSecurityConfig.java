@@ -33,7 +33,7 @@ public class AdminSecurityConfig {
 
  @Bean
  UserDetailsService adminUsers(@Value("${ADMIN_USERNAME:admin}") String username,
-      @Value("${ADMIN_PASSWORD:}") String password) {
+    @Value("${ADMIN_PASSWORD:}") String password) {
   String secret = password.isBlank() ? UUID.randomUUID().toString() : password;
   String encoded = PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(secret);
   return new InMemoryUserDetailsManager(User.withUsername(username).password(encoded).roles("ADMIN").build());

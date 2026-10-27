@@ -28,16 +28,15 @@ CSV files are suitable for a single app instance; concurrent containers need sha
 
 ## Admin dashboard
 
-Set `ADMIN_PASSWORD` to a strong secret before starting the app (and optionally set `ADMIN_USERNAME`, which defaults to `admin`). Without a configured password, admin login is disabled. Open `/admin/app` for app ratings and `/admin/recommendations` for racquet feedback; your browser will request HTTP Basic credentials. The dashboard reads both CSV files without modifying them, including older rows with fewer columns.
+The admin password defaults to the `ADMIN_PASSWORD` value in `src/main/resources/application.properties`. `ADMIN_USERNAME` defaults to `admin`. Open `/admin/app` for app ratings and `/admin/recommendations` for racquet feedback; your browser will request HTTP Basic credentials. The dashboard reads both CSV files without modifying them, including older rows with fewer columns.
 
-For a local PowerShell session, set the password in the terminal before starting or restarting the app:
+Start the app with:
 
 ```powershell
-$env:ADMIN_PASSWORD = Read-Host 'Admin password'
 java -jar target/tennis-racquet-cbr-1.0.0.jar --server.port=8081
 ```
 
-For Docker, set `ADMIN_PASSWORD` in the host environment or deployment secrets and pass it to the container with `--env ADMIN_PASSWORD`. Do not put the password directly in the Docker command or image.
+For deployment, override the file value with an `ADMIN_PASSWORD` environment variable from your secret manager. The value in the properties file is plaintext and can be exposed if the file or a built image is shared; remove it from tracked configuration and rotate it before production use. Do not put the password directly in a Docker command.
 
 Use HTTPS when accessing the admin dashboard over a network. Keep the CSV directory and credentials private; Basic authentication alone does not encrypt traffic. For Docker, pass the environment variables from your deployment's secret configuration, alongside the persistent `/app/data` volume.
 

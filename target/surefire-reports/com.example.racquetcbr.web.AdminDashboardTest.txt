@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.example.racquetcbr.web.AdminDashboardTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.027 s -- in com.example.racquetcbr.web.AdminDashboardTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.08 s -- in com.example.racquetcbr.web.AdminDashboardTest
