@@ -1,6 +1,6 @@
 # Tennis Racquet Case-Based Recommender
 
-This project is a browser-based tennis racquet recommender built with Java 17, Spring Boot, Thymeleaf, Apache Commons CSV, and jCOLIBRI. It represents each racquet as a case, compares a submitted player profile with the bundled case base, filters out ineligible candidates, ranks the rest by a weighted similarity score, and displays up to three recommendations.
+This project is a browser-based tennis racquet recommender built with Java 17, Spring Boot, Thymeleaf, Apache Commons CSV, and jCOLIBRI. It represents each racquet as a case, compares a submitted player profile with the bundled case base, filters out ineligible candidates, ranks the rest by a weighted similarity score, and displays the requested number of recommendations (1-10).
 
 The case base is bundled at `src/main/resources/data/racquets1.csv`. The current file contains 1,251 usable records. The app loads the file into memory at startup; it does not use a database.
 
@@ -8,6 +8,7 @@ The case base is bundled at `src/main/resources/data/racquets1.csv`. The current
 
 - [Requirements and run instructions](#requirements-and-run-instructions)
 - [Application flow](#application-flow)
+- [CBR cycle](#cbr-cycle)
 - [Project structure](#project-structure)
 - [Case base and data loading](#case-base-and-data-loading)
 - [Player profile and form behavior](#player-profile-and-form-behavior)
@@ -24,11 +25,13 @@ Install Java 17 and Maven. From the project root, run:
 mvn spring-boot:run
 ```
 
-Open `http://localhost:8080`. The configured default port is in `src/main/resources/application.properties`. To use another port, pass a Spring Boot argument, for example:
+On this Windows machine, if `mvn` is not on your PATH, use the portable Maven download from the project directory:
 
-```bash
-mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+```powershell
+& "$env:TEMP\racquet-build-tools\apache-maven-3.9.9\bin\mvn.cmd" spring-boot:run
 ```
+
+Open `http://localhost:8080`. The configured port is in `src/main/resources/application.properties`.
 
 To package and run the application:
 
@@ -70,12 +73,23 @@ sequenceDiagram
             Service->>Similarity: similarity(profile, racquet)
             Similarity-->>Service: normalized score
         end
-        Service-->>Controller: Up to three ranked recommendations
+        Service-->>Controller: Requested number of ranked recommendations (1-10)
         Controller-->>Browser: Render index.html with results below form
     end
 ```
 
 The recommendations are rendered on the same page as the form. The separate `results.html` template remains in the project, but the current controller returns `index` for both the initial page and recommendation submissions.
+
+## CBR Cycle
+
+Case-based reasoning commonly follows four steps: Retrieve, Reuse, Revise, and Retain. In this application:
+
+1. **Retrieve:** Load the racquet cases from the bundled CSV, remove cases that fail the age and arm-safety rules, then compare the submitted player profile with the remaining cases. Rank them by similarity, with selected brand and year preferences included in the final score.
+2. **Reuse:** Present the top 1-10 eligible racquets (as chosen by the user), with match scores, reasons, cautions, and available expert summaries and string suggestions. These cases are suggestions, not guaranteed playing outcomes.
+3. **Revise:** A player can give each recommendation a thumbs up or down with an optional reason. This feedback can inform later human review, but it does not automatically revise the current result or its similarity weights.
+4. **Retain:** Recommendation feedback and app ratings are saved to separate CSV files and viewable in the admin dashboard. The app does not automatically turn feedback into new racquet cases or update the bundled case base; changes to the case base require a separate review and data update.
+
+Thus, retrieval and reuse happen during each recommendation request, while revision and retention of learned cases remain manual processes.
 
 ## Project Structure
 
@@ -183,7 +197,7 @@ With no brand preference, the similarity score is unchanged. When a brand is sel
 finalScore = 0.85 * similarityScore + 0.15 * brandMatch
 ```
 
-`brandMatch` is 1 for a case-insensitive exact brand match and 0 otherwise. The service sorts eligible racquets by final score, descending, and returns at most three; in recommendation terms, K is 3. Scores are displayed as percentages to one decimal place.
+`brandMatch` is 1 for a case-insensitive exact brand match and 0 otherwise. The service sorts eligible racquets by final score, descending, and returns the user's selected number of recommendations (K = 1-10). Scores are displayed as percentages to one decimal place.
 
 Confidence labels are derived from the final score: High at 0.80 or above, Medium at 0.65 or above, otherwise Low. They are score bands, not calibrated probabilities.
 
