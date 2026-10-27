@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title th:text="${title + ' | Racquet CBR'}">Feedback | Racquet CBR</title>
+ <link rel="stylesheet" th:href="@{/css/app.css}"><link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body><main class="admin-wrap">
+ <header class="admin-header"><div><span class="eyebrow">RACQUET CBR / ADMIN</span><h1>Feedback</h1></div><a th:href="@{/}">View recommender</a></header>
+ <nav class="admin-tabs" aria-label="Feedback views">
+  <a th:href="@{/admin/app}" th:attr="aria-current=${section == 'app' ? 'page' : null}">App feedback</a>
+  <a th:href="@{/admin/recommendations}" th:attr="aria-current=${section == 'recommendations' ? 'page' : null}">Recommendation feedback</a>
+ </nav>
+ <section aria-labelledby="feedback-title">
+  <div class="admin-heading"><h2 id="feedback-title" th:text="${title}">App feedback</h2><span th:text="${#lists.size(table.rows) + ' responses'}">0 responses</span></div>
+  <p th:if="${#lists.isEmpty(table.rows)}" class="admin-empty">No feedback submitted yet.</p>
+  <div class="admin-table-wrap" th:unless="${#lists.isEmpty(table.rows)}">
+   <table><thead><tr><th scope="col" th:each="column : ${table.columns}" th:text="${#strings.capitalizeWords(#strings.replace(column, '_', ' '))}">Column</th></tr></thead>
+    <tbody><tr th:each="row : ${table.rows}"><td th:each="cell : ${row}" th:text="${cell}"></td></tr></tbody>
+   </table>
+  </div>
+ </section>
+</main></body></html>

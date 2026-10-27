@@ -1,4 +1,5 @@
 <!doctype html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Racquet CBR</title><link rel="stylesheet" th:href="@{/css/app.css}"></head><body><main class="wrap"><header><span class="eyebrow">CASE-BASED REASONING</span><h1>Find your tennis racquet match</h1><p>Compare your playing profile with <b th:text="${caseCount}">0</b> racquet cases.</p></header>
+<p th:if="${param.feedback != null}" class="feedback-status" role="status">Thanks for your feedback.</p>
 <form class="card grid" th:action="@{/recommend}" th:object="${profile}" method="post">
 <label>Age group<select th:field="*{ageGroup}"><option value="Adult">Adult</option><option value="Adult/Senior">Adult/Senior</option><option value="Junior/Youth">Junior/Youth</option></select></label>
 <label>Player level<select th:field="*{playerLevel}"><option value="Beginner/Recreational">Beginner/Recreational</option><option value="Beginner-Intermediate">Beginner-Intermediate</option><option value="Intermediate">Intermediate</option><option value="Intermediate-Advanced">Intermediate-Advanced</option><option value="Advanced">Advanced</option><option value="Junior">Junior</option></select></label>
@@ -13,4 +14,64 @@
 <label>Preferred head size<select th:field="*{preferredHeadSize}"><option value="">Any head size</option><option value="80">80 in²</option><option value="81">81 in²</option><option value="85">85 in²</option><option value="88">88 in²</option><option value="89">89 in²</option><option value="90">90 in²</option><option value="92">92 in²</option><option value="93">93 in²</option><option value="95">95 in²</option><option value="96">96 in²</option><option value="97">97 in²</option><option value="98">98 in²</option><option value="99">99 in²</option><option value="100">100 in²</option><option value="101">101 in²</option><option value="102">102 in²</option><option value="103">103 in²</option><option value="104">104 in²</option><option value="105">105 in²</option><option value="107">107 in²</option><option value="108">108 in²</option><option value="109">109 in²</option><option value="110">110 in²</option><option value="112">112 in²</option><option value="113">113 in²</option><option value="114">114 in²</option><option value="115">115 in²</option><option value="116">116 in²</option><option value="118">118 in²</option><option value="119">119 in²</option><option value="120">120 in²</option><option value="121">121 in²</option><option value="125">125 in²</option><option value="130">130 in²</option><option value="135">135 in²</option><option value="137">137 in²</option></select></label>
 <label>Brand preference<select th:field="*{brandPreference}"><option value="">Any brand</option><option value="Babolat">Babolat</option><option value="Diadem">Diadem</option><option value="Donnay">Donnay</option><option value="Dunlop">Dunlop</option><option value="Gamma">Gamma</option><option value="Head">Head</option><option value="Mantis">Mantis</option><option value="Pacific">Pacific</option><option value="Prince">Prince</option><option value="Pro Kennex">Pro Kennex</option><option value="Solinco">Solinco</option><option value="Tecnifibre">Tecnifibre</option><option value="TenX">TenX</option><option value="Toalson">Toalson</option><option value="Volkl">Volkl</option><option value="Wilson">Wilson</option><option value="Yonex">Yonex</option><option value="YPF">YPF</option></select></label>
 <button type="submit">Recommend racquets</button></form>
-<section class="results" th:if="${recommendations != null}"><header><span class="eyebrow">TOP CBR MATCHES</span><h2>Your recommended racquets</h2><p>Similarity is normalized when source values are missing. Safety filters are applied before ranking.</p></header><p th:if="${#lists.isEmpty(recommendations)}">No eligible racquets matched this profile.</p><article class="card result" th:each="r,stat:${recommendations}"><div class="rank" th:text="${stat.count}">1</div><div><div class="score" th:text="${r.score + '% match · ' + r.confidence + ' confidence'}"></div><h2 th:text="${r.racquet.displayName()}"></h2><p><b>Style:</b> <span th:text="${r.racquet.primaryStyle}"></span> · <b>Level:</b> <span th:text="${r.racquet.playerLevel}"></span> · <b>Pattern:</b> <span th:text="${r.racquet.stringPattern}"></span></p><ul><li th:each="x:${r.reasons}" th:text="${x}"></li></ul><p class="string"><b>Suggested string:</b> <span th:text="${r.racquet.stringType}"></span></p><p class="warning" th:each="x:${r.cautions}" th:text="${x}"></p><details><summary>Expert case summary</summary><p th:text="${r.racquet.summary}"></p></details></div></article></section></main><script>(() => { const ageGroup = document.querySelector('[name="ageGroup"]'); const playerLevel = document.querySelector('[name="playerLevel"]'); const primaryStyle = document.querySelector('[name="primaryStyle"]'); const applyJuniorDefaults = () => { if (ageGroup.value === 'Junior/Youth') { playerLevel.value = 'Junior'; primaryStyle.value = 'Junior/Development'; } }; ageGroup.addEventListener('change', applyJuniorDefaults); applyJuniorDefaults(); })();</script></body></html>
+<section class="results" th:if="${recommendations != null}">
+ <header><span class="eyebrow">TOP CBR MATCHES</span><h2>Your recommended racquets</h2><p>Similarity is normalized when source values are missing. Safety filters are applied before ranking.</p></header>
+ <p th:if="${#lists.isEmpty(recommendations)}">No eligible racquets matched this profile.</p>
+ <article class="card result" th:each="r,stat:${recommendations}">
+  <div class="rank" th:text="${stat.count}">1</div>
+  <div><div class="score" th:text="${r.score + '% match · ' + r.confidence + ' confidence'}"></div>
+   <h2 th:text="${r.racquet.displayName()}"></h2>
+   <p><b>Style:</b> <span th:text="${r.racquet.primaryStyle}"></span> · <b>Level:</b> <span th:text="${r.racquet.playerLevel}"></span> · <b>Pattern:</b> <span th:text="${r.racquet.stringPattern}"></span></p>
+   <ul><li th:each="x:${r.reasons}" th:text="${x}"></li></ul>
+   <p class="string"><b>Suggested string:</b> <span th:text="${r.racquet.stringType}"></span></p>
+   <p class="warning" th:each="x:${r.cautions}" th:text="${x}"></p>
+   <details><summary>Expert case summary</summary><p th:text="${r.racquet.summary}"></p></details>
+   <form class="feedback-form" th:action="@{/feedback/recommendation}" method="post">
+	<input type="hidden" name="slug" th:value="${r.racquet.slug}">
+   <input type="hidden" name="ageGroup" th:value="${profile.ageGroup}">
+   <input type="hidden" name="playerLevel" th:value="${profile.playerLevel}">
+   <input type="hidden" name="primaryStyle" th:value="${profile.primaryStyle}">
+   <input type="hidden" name="armSensitivity" th:value="${profile.armSensitivity}">
+   <input type="hidden" name="powerPreference" th:value="${profile.powerPreference}">
+   <input type="hidden" name="spinPreference" th:value="${profile.spinPreference}">
+   <input type="hidden" name="controlPreference" th:value="${profile.controlPreference}">
+   <input type="hidden" name="preferredWeight" th:value="${profile.preferredWeight}">
+   <input type="hidden" name="preferredHeadSize" th:value="${profile.preferredHeadSize}">
+   <input type="hidden" name="preferredYear" th:value="${profile.preferredYear}">
+   <input type="hidden" name="brandPreference" th:value="${profile.brandPreference}">
+   <input type="hidden" name="recommendationCount" th:value="${profile.recommendationCount}">
+	<span>Was this a good match?</span>
+	<div class="vote-actions"><button type="submit" name="vote" value="up" title="Good match" aria-label="Good match">👍</button><button type="submit" name="vote" value="down" title="Poor match" aria-label="Poor match">👎</button></div>
+	<label>Reason (optional)<input name="reason" maxlength="1000" placeholder="What worked or didn't?"></label>
+	<p class="feedback-status" role="status" aria-live="polite"></p>
+   </form>
+  </div>
+ </article>
+ <div class="app-feedback"><h3>How useful was this app?</h3>
+  <form class="feedback-form" th:action="@{/feedback/app}" method="post">
+    <label>First name<input name="firstName" autocomplete="given-name" maxlength="100" required></label>
+    <label>Last name<input name="lastName" autocomplete="family-name" maxlength="100" required></label>
+   <label>Rating<select name="rating" required><option value="">Choose a rating</option><option value="1">1 - Not useful</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 - Very useful</option></select></label>
+   <label>Comment (optional)<textarea name="comment" maxlength="1000" rows="3"></textarea></label>
+   <button type="submit">Send feedback</button><p class="feedback-status" role="status" aria-live="polite"></p>
+  </form>
+ </div>
+</section></main><script>(() => {
+ const ageGroup = document.querySelector('[name="ageGroup"]');
+ const playerLevel = document.querySelector('[name="playerLevel"]');
+ const primaryStyle = document.querySelector('[name="primaryStyle"]');
+ const applyJuniorDefaults = () => { if (ageGroup.value === 'Junior/Youth') { playerLevel.value = 'Junior'; primaryStyle.value = 'Junior/Development'; } };
+ ageGroup.addEventListener('change', applyJuniorDefaults); applyJuniorDefaults();
+ document.querySelectorAll('.feedback-form').forEach(form => form.addEventListener('submit', async event => {
+  event.preventDefault();
+  const status = form.querySelector('.feedback-status');
+  const data = new FormData(form);
+  if (event.submitter?.name) data.set(event.submitter.name, event.submitter.value);
+  try {
+   const response = await fetch(form.action, {method: 'POST', body: data});
+   if (!response.ok) throw new Error('Feedback could not be saved. Please try again.');
+   status.textContent = 'Thanks for your feedback.';
+   form.querySelectorAll('button').forEach(button => button.disabled = true);
+  } catch (error) { status.textContent = error.message; }
+ }));
+})();</script></body></html>
