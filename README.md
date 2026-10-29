@@ -69,6 +69,10 @@ The admin password defaults to the `ADMIN_PASSWORD` value in `src/main/resources
 Start the app with:
 
 ```powershell
+& "$env:TEMP\racquet-build-tools\apache-maven-3.9.9\bin\mvn.cmd" spring-boot:run
+OR
+mvn clean package
+
 java -jar target/tennis-racquet-cbr-1.0.0.jar
 ```
 

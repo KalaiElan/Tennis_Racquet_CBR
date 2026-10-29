@@ -121,4 +121,15 @@ class FeedbackCsvServiceTest {
    assertThat(rows.get(1).get("rating")).isEqualTo("4");
   }
  }
+
+   @Test
+   void readsWindows1252AppFeedback() throws Exception {
+    Path file = directory.resolve("app-feedback.csv");
+    Files.write(file, "timestamp,first_name,last_name,rating,comment\n2026-10-28,Ada,Lovelace,5,Caf\u00e9 was helpful\n"
+      .getBytes(java.nio.charset.Charset.forName("windows-1252")));
+    FeedbackCsvService service = new FeedbackCsvService(directory.toString(), mock(RacquetCsvRepository.class));
+
+    assertThat(service.appFeedback().rows()).hasSize(1);
+    assertThat(service.appFeedback().rows().get(0).get(4)).isEqualTo("Caf\u00e9 was helpful");
+   }
 }

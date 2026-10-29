@@ -3,7 +3,12 @@ package com.example.racquetcbr.service;
 import com.example.racquetcbr.model.PlayerProfile;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.FileSystemException;
 import java.nio.file.Path;
@@ -48,7 +53,7 @@ public class FeedbackCsvService {
  private synchronized FeedbackTable read(String filename, List<String> columns, List<String> legacy) throws IOException {
   Path file = directory.resolve(filename);
   if (Files.notExists(file) || Files.size(file) == 0) return new FeedbackTable(columns, List.of());
-  try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
+  try (Reader reader = openCsvReader(file);
     CSVParser parser = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build().parse(reader)) {
    List<String> actual = parser.getHeaderNames();
    if (!actual.equals(columns) && !actual.equals(legacy)) throw new IOException("Unrecognized feedback CSV header");
@@ -115,7 +120,7 @@ public class FeedbackCsvService {
 
  private void upgradeRecommendationFile(Path file) throws IOException {
     Path replacement = null;
-  try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
+  try (Reader reader = openCsvReader(file);
       CSVParser parser = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build().parse(reader)) {
    if (parser.getHeaderNames().equals(List.of(RECOMMENDATION_HEADER))) return;
    if (!parser.getHeaderNames().equals(LEGACY_HEADER)) throw new IOException("Unrecognized recommendation feedback CSV header");
@@ -133,7 +138,7 @@ public class FeedbackCsvService {
 
  private void upgradeAppFile(Path file) throws IOException {
   Path replacement = null;
-  try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
+  try (Reader reader = openCsvReader(file);
     CSVParser parser = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build().parse(reader)) {
    if (parser.getHeaderNames().equals(List.of(APP_HEADER))) return;
    if (!parser.getHeaderNames().equals(LEGACY_APP_HEADER)) throw new IOException("Unrecognized app feedback CSV header");
@@ -161,4 +166,26 @@ public class FeedbackCsvService {
    }
   }
  }
+
+   private Reader openCsvReader(Path file) throws IOException {
+    byte[] bytes = Files.readAllBytes(file);
+    int offset = 0;
+    Charset charset = StandardCharsets.UTF_8;
+    if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
+     offset = 3;
+    } else if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+     charset = StandardCharsets.UTF_16LE;
+     offset = 2;
+    } else if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+     charset = StandardCharsets.UTF_16BE;
+     offset = 2;
+    }
+    try {
+     String text = charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+       .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes, offset, bytes.length - offset)).toString();
+     return new StringReader(text);
+    } catch (CharacterCodingException invalidUtf) {
+     return new StringReader(Charset.forName("windows-1252").decode(ByteBuffer.wrap(bytes)).toString());
+    }
+   }
 }
